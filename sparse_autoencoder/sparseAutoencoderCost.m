@@ -48,7 +48,7 @@ z2 = W1 * data + repmat(b1, 1, n_samples);
 a2 = sigmoid(z2); % 25 10000
 
 z3 = W2 * a2 + repmat(b2, 1, n_samples);
-a3 = sigmoid(z3); % 25 10000
+a3 = sigmoid(z3); % 64 10000
 
 rho_hat = sum(a2, 2) / n_samples;
 
