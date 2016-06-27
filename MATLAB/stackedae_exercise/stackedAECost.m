@@ -62,18 +62,41 @@ groundTruth = full(sparse(labels, 1:M, 1));
 %
 
 
+n = numel(stack)
+z = cell(n+1, 1);
+a = cell(n+1, 1);
+a{1} = data;
 
 
+for l = (1:n)
+    z_temp = stack{l}.w * a{l};
+    z{l+1} = bsxfun(@plus, z_temp, stack{l}.b);
+    a{l+1} = sigmoid(z{l+1});
+end
 
+% Equivalent of doing softmax calculation
+td = softmaxTheta * a{n+1};
+td = bsxfun(@minus, td, max(td));
+temp = exp(td);
+denominator = sum(temp);
+p = bsxfun(@rdivide, temp, denominator);
 
+y = groundTruth;
+cost = (-1/m) * sum(sum(y .* log(p))) + (lambda / 2) * sum(sum(theta .^2));
+softmaxThetaGrad = (-1/m) * (y - p) * a{n+1}' + lambda * softmaxTheta;
 
+% delta
+d = cell(n+1);
+d{n+1} = -(softmaxTheta' * (y - p)) .* a{n + 1} .* (1 -a{n + 1});
 
+for l = (n:-1:2)
+    d{l} = stack{l}.w' * d{l+1} .* a{l} .* (1-a{l});
+end
 
-
-
-
-
-
+for l = (n:-1:1)
+    stackgrad{l}.w = d{l+1} * a{l}' / m;
+    stackgrad{l}.b = sum(d{l+1}, 2) / m;
+end
 
 % -------------------------------------------------------------------------
 

@@ -54,20 +54,20 @@ sae1Theta = initializeParameters(hiddenSizeL1, inputSize);
 %  Instructions: Train the first layer sparse autoencoder, this layer has
 %                an hidden size of "hiddenSizeL1"
 %                You should store the optimal parameters in sae1OptTheta
+options.Method = 'lbfgs'; % Here, we use L-BFGS to optimize our cost
+                          % function. Generally, for minFunc to work, you
+                          % need a function pointer with two outputs: the
+                          % function value and the gradient. In our problem,
+                          % sparseAutoencoderCost.m satisfies this.
+options.MaxIter = 400;	  % Maximum number of iterations of L-BFGS to run 
+options.Display = 'iter';
+options.GradObj = 'on';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+ [sae1OptTheta, cost] = fminlbfgs( @(p) sparseAutoencoderCost(p, ...
+                                   inputSize, hiddenSizeL1, ...
+                                   lambda, sparsityParam, ...
+                                   beta, trainData), ...
+                              sae1Theta, options);
 
 % -------------------------------------------------------------------------
 
@@ -96,11 +96,11 @@ sae2Theta = initializeParameters(hiddenSizeL2, hiddenSizeL1);
 
 
 
-
-
-
-
-
+ [sae2OptTheta, cost] = fminlbfgs( @(p) sparseAutoencoderCost(p, ...
+                                   hiddenSizeL1, hiddenSizeL2, ...
+                                   lambda, sparsityParam, ...
+                                   beta, sae1Features), ...
+                              sae2Theta, options);
 
 
 
@@ -134,10 +134,11 @@ saeSoftmaxTheta = 0.005 * randn(hiddenSizeL2 * numClasses, 1);
 
 
 
+options.MaxIter = 100;
+softmaxModel = softmaxTrain(hiddenSizeL2, numClasses, lambda, ...
+                            sae2Features, trainLabels, options);
 
-
-
-
+saeSoftmaxOptTheta = softmaxModel.optTheta(:);
 
 
 
@@ -171,21 +172,11 @@ stackedAETheta = [ saeSoftmaxOptTheta ; stackparams ];
 %
 %
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+[stackedAEOptTheta, cost] = fminlbfgs( @(p) stackedAECost(p, ...
+                                   inputSize, hiddenSizeL2, ...
+                                   numClasses, netconfig, ...
+                                   lambda, trainData, trainLabels), ...
+                              stackedAETheta, options);
 
 % -------------------------------------------------------------------------
 
